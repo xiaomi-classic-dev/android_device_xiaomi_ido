@@ -1,6 +1,6 @@
 /*
    Copyright (c) 2016, The CyanogenMod Project
-   Copyright (c) 2017, The LineageOS Project
+
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
    met:
@@ -13,6 +13,7 @@
     * Neither the name of The Linux Foundation nor the names of its
       contributors may be used to endorse or promote products derived
       from this software without specific prior written permission.
+
    THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED
    WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT
@@ -26,56 +27,66 @@
    IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
+#include <fcntl.h>
 #include <stdio.h>
-#include <string.h>
-#include <sys/sysinfo.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
+#include <android-base/file.h>
+#include <android-base/logging.h>
 #include <android-base/properties.h>
 #include <android-base/strings.h>
 
-#include "vendor_init.h"
 #include "property_service.h"
+#include "vendor_init.h"
 
-char const *heapstartsize;
-char const *heapgrowthlimit;
-char const *heapsize;
-char const *heapminfree;
-char const *heapmaxfree;
+#include "init_msm8916.h"
 
+using android::base::GetProperty;
+using android::base::ReadFileToString;
 using android::base::Trim;
 using android::init::property_set;
 
-void check_device()
+__attribute__ ((weak))
+void init_target_properties()
 {
-    struct sysinfo sys;
+}
 
-    sysinfo(&sys);
+static void init_alarm_boot_properties()
+{
+    char const *boot_reason_file = "/proc/sys/kernel/boot_reason";
+    std::string boot_reason;
+    std::string tmp = GetProperty("ro.boot.alarmboot","");
 
-    if (sys.totalram > 2048ull * 1024 * 1024) {
-        // from - phone-xxhdpi-3072-dalvik-heap.mk
-        heapstartsize = "8m";
-        heapgrowthlimit = "288m";
-        heapsize = "768m";
-        heapminfree = "512k";
-    } else {
-        // from - phone-xxhdpi-2048-dalvik-heap.mk
-        heapstartsize = "16m";
-        heapgrowthlimit = "192m";
-        heapsize = "512m";
-        heapminfree = "2m";
+    if (ReadFileToString(boot_reason_file, &boot_reason)) {
+        /*
+         * Setup ro.alarm_boot value to true when it is RTC triggered boot up
+         * For existing PMIC chips, the following mapping applies
+         * for the value of boot_reason:
+         *
+         * 0 -> unknown
+         * 1 -> hard reset
+         * 2 -> sudden momentary power loss (SMPL)
+         * 3 -> real time clock (RTC)
+         * 4 -> DC charger inserted
+         * 5 -> USB charger insertd
+         * 6 -> PON1 pin toggled (for secondary PMICs)
+         * 7 -> CBLPWR_N pin toggled (for external power supply)
+         * 8 -> KPDPWR_N pin toggled (power key pressed)
+         */
+        if (Trim(boot_reason) == "3" || tmp == "true")
+            property_set("ro.alarm_boot", "true");
+        else
+            property_set("ro.alarm_boot", "false");
     }
 }
 
-void init_target_properties()
+void vendor_load_properties()
 {
-    check_device();
-
-    property_set("dalvik.vm.heapstartsize", heapstartsize);
-    property_set("dalvik.vm.heapgrowthlimit", heapgrowthlimit);
-    property_set("dalvik.vm.heapsize", heapsize);
-    property_set("dalvik.vm.heaptargetutilization", "0.75");
-    property_set("dalvik.vm.heapminfree", heapminfree);
-    property_set("dalvik.vm.heapmaxfree", "8m");
-
+    // Init a dummy BT MAC address, will be overwritten later
+    property_set("ro.boot.btmacaddr", "00:00:00:00:00:00");
+    init_target_properties();
+    init_alarm_boot_properties();
 }
