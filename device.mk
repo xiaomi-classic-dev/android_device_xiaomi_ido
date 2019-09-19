@@ -20,7 +20,7 @@ $(call inherit-product, vendor/xiaomi/ido/ido-vendor.mk)
 # Overlay
 DEVICE_PACKAGE_OVERLAYS += \
     $(LOCAL_PATH)/overlay \
-    $(LOCAL_PATH)/overlay-mokee
+    $(LOCAL_PATH)/overlay-lineage
 
 # AAPT
 PRODUCT_AAPT_CONFIG := normal
@@ -151,7 +151,7 @@ PRODUCT_COPY_FILES += \
 
 # Touch
 PRODUCT_PACKAGES += \
-    vendor.mokee.touch@1.0-service.ido
+    vendor.lineage.touch@1.0-service.ido
 
 # USB ID
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \

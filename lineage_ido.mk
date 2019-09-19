@@ -15,8 +15,8 @@
 
 $(call inherit-product, device/xiaomi/ido/full_ido.mk)
 
-# Inherit some common MK stuff.
-$(call inherit-product, vendor/mk/config/common_full_phone.mk)
+# Inherit some common Lineage stuff.
+$(call inherit-product, vendor/lineage/config/common_full_phone.mk)
 
 # Must define platform variant before including any common things
 TARGET_BOARD_PLATFORM_VARIANT := msm8939
@@ -24,7 +24,7 @@ TARGET_BOARD_PLATFORM_VARIANT := msm8939
 # Assert
 TARGET_OTA_ASSERT_DEVICE := ido
 
-PRODUCT_NAME := mk_ido
+PRODUCT_NAME := lineage_ido
 BOARD_VENDOR := xiaomi
 PRODUCT_DEVICE := ido
 
