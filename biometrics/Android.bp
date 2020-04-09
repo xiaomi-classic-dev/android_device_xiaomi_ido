@@ -16,6 +16,7 @@
 cc_binary {
     name: "android.hardware.biometrics.fingerprint@2.0-service.ido",
     init_rc: ["android.hardware.biometrics.fingerprint@2.0-service.ido.rc"],
+    vintf_fragments: ["android.hardware.biometrics.fingerprint@2.0-service.ido.xml"],
     proprietary: true,
     relative_install_path: "hw",
     srcs: [
